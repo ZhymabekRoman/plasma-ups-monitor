@@ -6,7 +6,7 @@
   <kcfgfile name=""/>
   <group name="General">
     <entry name="upsName" type="String">
-      <default>eaton@localhost</default>
+      <default>ups@localhost</default>
     </entry>
     <entry name="refreshSeconds" type="Int">
       <default>10</default>

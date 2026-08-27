@@ -12,11 +12,6 @@ PlasmoidItem {
     Plasmoid.icon: iconName
     Plasmoid.title: info.ok && info.model ? info.model : i18n("UPS Monitor")
 
-    implicitWidth: Kirigami.Units.gridUnit * 24
-    implicitHeight: Kirigami.Units.gridUnit * 15
-    Layout.minimumWidth: Kirigami.Units.gridUnit * 20
-    Layout.minimumHeight: Kirigami.Units.gridUnit * 12
-
     readonly property string helperPath: String(Qt.resolvedUrl("../scripts/nut-status.sh")).replace(/^file:\/\//, "")
     readonly property int refreshSeconds: Math.max(3, Number(Plasmoid.configuration.refreshSeconds || 10))
     readonly property string upsName: String(Plasmoid.configuration.upsName || "eaton@localhost")
@@ -50,14 +45,14 @@ PlasmoidItem {
     })
 
     property bool hasAlarm: info.ok && !!info.alarm && String(info.alarm).length > 0
-    property bool isCharging: info.ok && hasStatusToken("CHRG")
+    property bool isCharging: info.ok && (hasStatusToken("CHRG") || !info.onBattery)
     property string iconName: {
         if (!info.ok) {
             return "battery-missing"
         }
 
         const percent = Number(info.batteryPercent)
-        let level = "missing"
+        let level = "100"
         if (Number.isFinite(percent)) {
             if (percent >= 90) {
                 level = "100"
@@ -96,7 +91,11 @@ PlasmoidItem {
 
     property string percentText: formatPercent(info.batteryPercent)
     property string powerText: formatNumber(info.powerWatts, "W", 0)
-    property string voltageText: formatNumber(info.outputVoltage, "V", 0)
+    property string voltageText: formatNumber(info.outputVoltage, "V", 1)
+    property string inputVoltageText: formatNumber(info.inputVoltage, "V", 1)
+    property string outputVoltageText: formatNumber(info.outputVoltage, "V", 1)
+    property string batteryVoltageText: formatNumber(info.batteryVoltage, "V", 1)
+    property string frequencyText: formatNumber(info.frequency, "Hz", 1)
     property string runtimeTextValue: formatRuntime(info.runtimeSeconds)
     property string loadText: formatNumber(info.loadPercent, "%", 0)
     property string lastPowerLossText: info.ok && info.lastPowerLoss ? info.lastPowerLoss : i18n("Never")
@@ -121,6 +120,12 @@ PlasmoidItem {
         }
         if (info.onBattery) {
             return i18n("Running on battery")
+        }
+        if (info.status && info.status.indexOf("BOOST") >= 0) {
+            return i18n("Online • AVR Boost")
+        }
+        if (info.status && info.status.indexOf("TRIM") >= 0) {
+            return i18n("Online • AVR Trim")
         }
         if (isCharging) {
             return i18n("Online • Charging")
@@ -284,7 +289,7 @@ PlasmoidItem {
     }
 
     Connections {
-        target: Plasmoid
+        target: Plasmoid.configuration
         function onConfigurationChanged() {
             execSource.connectedSources = [root.sourceCommand]
         }

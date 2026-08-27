@@ -51,19 +51,53 @@ get_value() {
 
 status="$(get_value 'ups.status')"
 model="$(get_value 'ups.model')"
+firmware="$(get_value 'ups.firmware.aux')"
 charge="$(get_value 'battery.charge')"
 watts="$(get_value 'ups.realpower')"
 voltage="$(get_value 'output.voltage')"
+input_voltage="$(get_value 'input.voltage')"
+battery_voltage="$(get_value 'battery.voltage')"
+frequency="$(get_value 'output.frequency')"
 runtime="$(get_value 'battery.runtime')"
 load="$(get_value 'ups.load')"
 alarm="$(get_value 'ups.alarm')"
+nominal_current="$(get_value 'output.current.nominal')"
+nominal_voltage="$(get_value 'output.voltage.nominal')"
+
+if [ -z "$model" ]; then
+    if [ -n "$firmware" ]; then
+        model="UPS ($firmware)"
+    else
+        model="UPS"
+    fi
+fi
+
+if [ -z "$voltage" ]; then
+    voltage="$nominal_voltage"
+fi
+
+# Calculate estimated watts if not reported
+if [ -z "$watts" ] && [ -n "$load" ]; then
+    nom_v="${nominal_voltage:-230}"
+    nom_i="${nominal_current:-6}"
+    # Max real power ~ (nom_v * nom_i * 0.6)
+    max_watts=$(( $(printf '%.0f' "$nom_v") * $(printf '%.0f' "$nom_i") * 6 / 10 ))
+    watts=$(( max_watts * $(printf '%.0f' "$load") / 100 ))
+fi
+
+# Calculate estimated runtime if not reported (based on 2x7Ah 24V batteries ~ 168Wh)
+if [ -z "$runtime" ] && [ -n "$charge" ]; then
+    cur_watts="${watts:-50}"
+    if [ "$cur_watts" -le 0 ]; then
+        cur_watts=30
+    fi
+    # Total usable energy ~ 140Wh * (charge/100), runtime in seconds
+    runtime=$(( 140 * 3600 * $(printf '%.0f' "$charge") / 100 / (cur_watts + 15) ))
+fi
+
 last_onbatt=""
 last_onbatt_epoch=""
 previous_onbatt=false
-
-if [ -z "$voltage" ]; then
-    voltage="$(get_value 'output.voltage.nominal')"
-fi
 
 on_battery=false
 case "$status" in
@@ -101,11 +135,20 @@ printf '"onBattery":%s,' "$on_battery"
 printf '"batteryPercent":'
 json_number_or_null "$charge"
 printf ','
-printf '"powerWatts":'
-json_number_or_null "$watts"
+printf '"batteryVoltage":'
+json_number_or_null "$battery_voltage"
+printf ','
+printf '"inputVoltage":'
+json_number_or_null "$input_voltage"
 printf ','
 printf '"outputVoltage":'
 json_number_or_null "$voltage"
+printf ','
+printf '"frequency":'
+json_number_or_null "$frequency"
+printf ','
+printf '"powerWatts":'
+json_number_or_null "$watts"
 printf ','
 printf '"runtimeSeconds":'
 json_number_or_null "$runtime"
