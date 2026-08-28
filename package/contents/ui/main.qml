@@ -235,13 +235,20 @@ PlasmoidItem {
         connectedSources: [root.sourceCommand]
 
         onNewData: function(sourceName, data) {
-            if (sourceName !== root.sourceCommand) {
-                return
-            }
-
             const payload = root.extractPayload(data)
 
-            if (!payload.length) {
+            if (payload && payload.length > 0) {
+                try {
+                    const parsed = JSON.parse(payload)
+                    root.info = parsed
+                    root.lastError = parsed.ok ? "" : (parsed.error || i18n("Unknown UPS error"))
+                    root.refreshDeadlineMs = Date.now() + (root.refreshSeconds * 1000)
+                } catch (error) {
+                    if (sourceName === root.sourceCommand) {
+                        root.lastError = i18n("Invalid helper output")
+                    }
+                }
+            } else if (sourceName === root.sourceCommand) {
                 root.lastError = i18n("No data returned by helper")
                 root.info = {
                     ok: false,
@@ -249,6 +256,7 @@ PlasmoidItem {
                     model: "",
                     status: "",
                     onBattery: false,
+                    powerSaveActive: false,
                     batteryPercent: null,
                     powerWatts: null,
                     outputVoltage: null,
@@ -259,40 +267,21 @@ PlasmoidItem {
                     error: root.lastError
                 }
                 root.refreshDeadlineMs = Date.now() + (root.refreshSeconds * 1000)
-                return
             }
 
-            try {
-                const parsed = JSON.parse(payload)
-                root.info = parsed
-                root.lastError = parsed.ok ? "" : (parsed.error || i18n("Unknown UPS error"))
-                root.refreshDeadlineMs = Date.now() + (root.refreshSeconds * 1000)
-            } catch (error) {
-                root.lastError = i18n("Invalid helper output")
-                root.info = {
-                    ok: false,
-                    upsName: root.upsName,
-                    model: "",
-                    status: "",
-                    onBattery: false,
-                    batteryPercent: null,
-                    powerWatts: null,
-                    outputVoltage: null,
-                    runtimeSeconds: null,
-                    loadPercent: null,
-                    alarm: "",
-                    lastPowerLoss: "",
-                    error: String(error)
+            if (sourceName !== root.sourceCommand) {
+                execSource.disconnectSource(sourceName)
+                if (execSource.connectedSources.indexOf(root.sourceCommand) === -1) {
+                    execSource.connectSource(root.sourceCommand)
                 }
-                root.refreshDeadlineMs = Date.now() + (root.refreshSeconds * 1000)
             }
         }
     }
 
     function togglePowerTweaks() {
         const targetState = info.powerSaveActive ? "off" : "on"
-        const scriptPath = String(Qt.resolvedUrl("../scripts/power-tweaks.sh")).replace(/^file:\/\//, "")
-        execSource.connectedSources = ["(sudo /usr/local/bin/power-tweaks.sh " + targetState + " || sudo " + scriptPath + " " + targetState + ") && " + root.sourceCommand]
+        const cmd = "sudo /usr/local/bin/power-tweaks.sh " + targetState + " && " + root.sourceCommand
+        execSource.connectSource(cmd)
     }
 
     Connections {
