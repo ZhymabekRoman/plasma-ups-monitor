@@ -42,7 +42,7 @@ Item {
             opacity: root.info.onBattery ? 0.75 : 1
 
             SequentialAnimation on opacity {
-                running: root.info.onBattery
+                running: Boolean(root.info && root.info.onBattery)
                 loops: Animation.Infinite
                 OpacityAnimator { from: 1; to: 0.45; duration: 700 }
                 OpacityAnimator { from: 0.45; to: 1; duration: 700 }
@@ -84,10 +84,10 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
             Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
-            opacity: root.info.onBattery ? 0.75 : 1
+            opacity: (root.info && root.info.onBattery) ? 0.75 : 1
 
             SequentialAnimation on opacity {
-                running: root.info.onBattery
+                running: Boolean(root.info && root.info.onBattery)
                 loops: Animation.Infinite
                 OpacityAnimator { from: 1; to: 0.45; duration: 700 }
                 OpacityAnimator { from: 0.45; to: 1; duration: 700 }

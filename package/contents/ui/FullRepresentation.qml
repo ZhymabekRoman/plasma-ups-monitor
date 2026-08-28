@@ -119,7 +119,7 @@ Item {
                 anchors.fill: parent
                 spacing: 2
                 QQC2.Label { text: i18n("Alarm"); opacity: 0.7 }
-                QQC2.Label { text: root.info.alarm; color: Kirigami.Theme.negativeTextColor; font.bold: true; wrapMode: Text.WordWrap }
+                QQC2.Label { text: String(root.info.alarm || ""); color: Kirigami.Theme.negativeTextColor; font.bold: true; wrapMode: Text.WordWrap }
             }
         }
 
@@ -193,6 +193,48 @@ Item {
                     spacing: 2
                     QQC2.Label { Layout.fillWidth: true; text: i18n("Estimated Runtime"); opacity: 0.7; elide: Text.ElideRight }
                     QQC2.Label { Layout.fillWidth: true; text: root.runtimeTextValue; font.bold: true; horizontalAlignment: Text.AlignRight }
+                }
+            }
+        }
+
+        // Power-Saver Mode Row
+        QQC2.Frame {
+            Layout.fillWidth: true
+            RowLayout {
+                anchors.fill: parent
+                spacing: Kirigami.Units.smallSpacing
+
+                Kirigami.Icon {
+                    source: root.info.powerSaveActive ? "battery-profile-powersave" : "speedometer"
+                    Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+                    Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 1
+
+                    QQC2.Label {
+                        Layout.fillWidth: true
+                        text: i18n("UPS Power-Saver Tweaks")
+                        opacity: 0.7
+                        font.pointSize: Kirigami.Theme.defaultFont.pointSize - 1
+                        elide: Text.ElideRight
+                    }
+
+                    QQC2.Label {
+                        Layout.fillWidth: true
+                        text: root.info.powerSaveActive ? i18n("Active (Low Power / 1.2 GHz)") : i18n("Inactive (Normal Performance)")
+                        font.bold: true
+                        color: root.info.powerSaveActive ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.textColor
+                        elide: Text.ElideRight
+                    }
+                }
+
+                QQC2.Button {
+                    text: root.info.powerSaveActive ? i18n("Restore") : i18n("Save Power")
+                    icon.name: root.info.powerSaveActive ? "media-playback-start" : "battery-profile-powersave"
+                    onClicked: root.togglePowerTweaks()
                 }
             }
         }

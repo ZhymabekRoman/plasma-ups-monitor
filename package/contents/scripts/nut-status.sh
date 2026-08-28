@@ -36,6 +36,11 @@ read_first_existing_timestamp() {
 }
 
 if ! output="$(upsc "$UPS_NAME" 2>&1)"; then
+    case "$output" in
+        *"Data stale"*|*"Driver not connected"*|*"Entity not found"*)
+            systemctl restart nut-driver@ups.service >/dev/null 2>&1 &
+            ;;
+    esac
     err="$(json_escape "$output")"
     printf '{'
     printf '"ok":false,'
@@ -122,8 +127,15 @@ else
     printf 'false' > "$LOCAL_PREV_ONBATT_FILE"
 fi
 
-if last_onbatt_epoch="$(read_first_existing_timestamp)"; then
-    last_onbatt="$(date -d "@$last_onbatt_epoch" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || true)"
+powersave_active=false
+if [ -r /sys/devices/system/cpu/cpufreq/boost ]; then
+    if [ "$(cat /sys/devices/system/cpu/cpufreq/boost 2>/dev/null)" = "0" ]; then
+        powersave_active=true
+    fi
+elif command -v powerprofilesctl >/dev/null 2>&1; then
+    if [ "$(powerprofilesctl get 2>/dev/null)" = "power-saver" ]; then
+        powersave_active=true
+    fi
 fi
 
 printf '{'
@@ -132,6 +144,7 @@ printf '"upsName":"%s",' "$(json_escape "$UPS_NAME")"
 printf '"model":"%s",' "$(json_escape "$model")"
 printf '"status":"%s",' "$(json_escape "$status")"
 printf '"onBattery":%s,' "$on_battery"
+printf '"powerSaveActive":%s,' "$powersave_active"
 printf '"batteryPercent":'
 json_number_or_null "$charge"
 printf ','

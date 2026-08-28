@@ -34,6 +34,7 @@ PlasmoidItem {
         model: "",
         status: "",
         onBattery: false,
+        powerSaveActive: false,
         batteryPercent: null,
         powerWatts: null,
         outputVoltage: null,
@@ -286,6 +287,12 @@ PlasmoidItem {
                 root.refreshDeadlineMs = Date.now() + (root.refreshSeconds * 1000)
             }
         }
+    }
+
+    function togglePowerTweaks() {
+        const targetState = info.powerSaveActive ? "off" : "on"
+        const scriptPath = String(Qt.resolvedUrl("../scripts/power-tweaks.sh")).replace(/^file:\/\//, "")
+        execSource.connectedSources = ["(sudo /usr/local/bin/power-tweaks.sh " + targetState + " || sudo " + scriptPath + " " + targetState + ") && " + root.sourceCommand]
     }
 
     Connections {
