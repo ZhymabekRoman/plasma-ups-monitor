@@ -36,11 +36,6 @@ read_first_existing_timestamp() {
 }
 
 if ! output="$(upsc "$UPS_NAME" 2>&1)"; then
-    case "$output" in
-        *"Data stale"*|*"Driver not connected"*|*"Entity not found"*)
-            systemctl restart nut-driver@ups.service >/dev/null 2>&1 &
-            ;;
-    esac
     err="$(json_escape "$output")"
     printf '{'
     printf '"ok":false,'
