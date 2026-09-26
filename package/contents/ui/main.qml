@@ -278,11 +278,6 @@ PlasmoidItem {
         }
     }
 
-    function togglePowerTweaks() {
-        const targetState = info.powerSaveActive ? "off" : "on"
-        const cmd = "sudo /usr/local/bin/power-tweaks.sh " + targetState + " && " + root.sourceCommand
-        execSource.connectSource(cmd)
-    }
 
     Connections {
         target: Plasmoid.configuration

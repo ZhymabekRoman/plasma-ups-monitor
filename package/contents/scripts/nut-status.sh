@@ -122,24 +122,12 @@ else
     printf 'false' > "$LOCAL_PREV_ONBATT_FILE"
 fi
 
-powersave_active=false
-if [ -r /sys/devices/system/cpu/cpufreq/boost ]; then
-    if [ "$(cat /sys/devices/system/cpu/cpufreq/boost 2>/dev/null)" = "0" ]; then
-        powersave_active=true
-    fi
-elif command -v powerprofilesctl >/dev/null 2>&1; then
-    if [ "$(powerprofilesctl get 2>/dev/null)" = "power-saver" ]; then
-        powersave_active=true
-    fi
-fi
-
 printf '{'
 printf '"ok":true,'
 printf '"upsName":"%s",' "$(json_escape "$UPS_NAME")"
 printf '"model":"%s",' "$(json_escape "$model")"
 printf '"status":"%s",' "$(json_escape "$status")"
 printf '"onBattery":%s,' "$on_battery"
-printf '"powerSaveActive":%s,' "$powersave_active"
 printf '"batteryPercent":'
 json_number_or_null "$charge"
 printf ','

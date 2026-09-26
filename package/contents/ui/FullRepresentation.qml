@@ -197,48 +197,6 @@ Item {
             }
         }
 
-        // Power-Saver Mode Row
-        QQC2.Frame {
-            Layout.fillWidth: true
-            RowLayout {
-                anchors.fill: parent
-                spacing: Kirigami.Units.smallSpacing
-
-                Kirigami.Icon {
-                    source: root.info.powerSaveActive ? "battery-profile-powersave" : "speedometer"
-                    Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
-                    Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
-                }
-
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 1
-
-                    QQC2.Label {
-                        Layout.fillWidth: true
-                        text: i18n("UPS Power-Saver Tweaks")
-                        opacity: 0.7
-                        font.pointSize: Kirigami.Theme.defaultFont.pointSize - 1
-                        elide: Text.ElideRight
-                    }
-
-                    QQC2.Label {
-                        Layout.fillWidth: true
-                        text: root.info.powerSaveActive ? i18n("Active (Low Power / 1.2 GHz)") : i18n("Inactive (Normal Performance)")
-                        font.bold: true
-                        color: root.info.powerSaveActive ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.textColor
-                        elide: Text.ElideRight
-                    }
-                }
-
-                QQC2.Button {
-                    text: root.info.powerSaveActive ? i18n("Restore") : i18n("Save Power")
-                    icon.name: root.info.powerSaveActive ? "media-playback-start" : "battery-profile-powersave"
-                    onClicked: root.togglePowerTweaks()
-                }
-            }
-        }
-
         // Bottom Footer: Last Power Loss + Refresh Countdown
         RowLayout {
             Layout.fillWidth: true
